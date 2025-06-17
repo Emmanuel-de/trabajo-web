@@ -1,0 +1,553 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+/* Estilos Generales del Cuerpo */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f2f5; /* Fondo gris claro */
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Asegura que el pie de página se pegue a la parte inferior */
+}
+
+/* Estilos del Encabezado */
+.main-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.logo img {
+    height: 50px; /* Ajustar según sea necesario */
+}
+
+.top-nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+.top-nav li {
+    margin-left: 20px;
+}
+
+.top-nav a {
+    text-decoration: none;
+    color: #004d99; /* Azul oscuro */
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+}
+
+.top-nav a i {
+    margin-right: 5px;
+    color: #888;
+}
+
+.banner {
+    background-color: #004d99; /* Azul oscuro */
+    color: #ffffff;
+    text-align: right;
+    padding: 5px 20px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+/* Diseño del Contenedor Principal */
+.main-container {
+    display: flex;
+    flex: 1; /* Permite que el área de contenido crezca */
+    max-width: 1200px;
+    margin: 20px auto;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden; /* Limpiar flotantes si los hay */
+}
+
+/* Estilos de la Barra Lateral */
+.sidebar {
+    width: 250px;
+    background-color: #e0e6ec; /* Azul-gris más claro */
+    padding: 20px 0;
+    border-right: 1px solid #cfd8e3;
+}
+
+.sidebar-section {
+    margin-bottom: 15px;
+}
+
+.sidebar-title {
+    background-color: #004d99; /* Azul oscuro */
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    display: block;
+    font-weight: bold;
+    margin-bottom: 10px;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+.sidebar-title i {
+    margin-right: 8px;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar ul li a {
+    display: flex;
+    align-items: center;
+    padding: 8px 20px;
+    text-decoration: none;
+    color: #333;
+    transition: background-color 0.2s ease;
+}
+
+.sidebar ul li a i {
+    margin-right: 10px;
+    color: #666;
+}
+
+.sidebar ul li a:hover,
+.sidebar ul li a.active {
+    background-color: #d1e2f4; /* Azul más claro al pasar el ratón/activo */
+    color: #004d99;
+}
+
+
+/* Estilos del Área de Contenido */
+.content-area {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.button-group {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap; /* Permite que los botones se envuelvan */
+}
+
+.button-group .button {
+    padding: 10px 15px;
+    border: 1px solid #ccc;
+    background-color: #f0f0f0;
+    color: #333;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 0.9em;
+    white-space: nowrap; /* Evita el salto de línea dentro del botón */
+}
+
+.button-group .button.active {
+    background-color: #004d99; /* Azul oscuro */
+    color: white;
+    border-color: #004d99;
+}
+
+.main-content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr; /* Columna izquierda más ancha que la derecha */
+    gap: 20px;
+}
+
+.card {
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.card h2, .card h3 {
+    color: #004d99; /* Azul oscuro para los encabezados */
+    margin-top: 0;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.card h3 i {
+    margin-right: 8px;
+    color: #888;
+}
+
+/* Tarjeta de Servicio Electrónico */
+.electronic-service {
+    background-color: #e6f2ff; /* Fondo azul claro */
+    border-color: #b3d9ff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative; /* Para el posicionamiento del gráfico */
+    padding: 30px;
+}
+
+.electronic-service h2 {
+    color: #004d99;
+    font-size: 1.5em;
+    margin-bottom: 15px;
+}
+
+.service-details {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    width: 100%;
+}
+
+.service-icon {
+    width: 80px; /* Ajustar tamaño del ícono */
+    height: auto;
+    flex-shrink: 0; /* Evitar que se encoja */
+    margin-left: 20px; /* Ajustar posicionamiento */
+    margin-top: 10px;
+}
+
+.service-text {
+    text-align: left;
+    flex-grow: 1;
+}
+
+.service-text p {
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.service-text .highlight {
+    font-weight: bold;
+    color: #d9534f; /* Resaltado rojo */
+}
+
+.action-button {
+    background-color: #004d99;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    margin-right: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s ease;
+}
+
+.action-button:hover {
+    background-color: #003366;
+}
+
+/* Tarjeta de Registro */
+.registration-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.registration-card h2 {
+    line-height: 1.2;
+    margin-bottom: 15px;
+}
+
+.registration-image {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 15px;
+    border-radius: 5px;
+}
+
+.distance-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.distance-info p {
+    margin: 0;
+    font-weight: bold;
+    color: #555;
+}
+
+.click-here-link {
+    background-color: #f0ad4e; /* Naranja */
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 0.9em;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+}
+
+.click-here-link:hover {
+    background-color: #ec971f;
+}
+
+/* Secciones de Formatos e Información */
+.formats-section h3, .information-section h3 {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.formats-section ul, .information-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.formats-section li, .information-section li {
+    margin-bottom: 8px;
+    font-size: 0.95em;
+    color: #555;
+}
+
+/* Columna Derecha - Tarjeta de Inicio de Sesión */
+.login-card {
+    padding: 30px;
+    text-align: center;
+}
+
+.login-form .input-group {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 8px 10px;
+    margin-bottom: 15px;
+}
+
+.login-form .input-group i {
+    margin-right: 10px;
+    color: #888;
+}
+
+.login-form input[type="text"],
+.login-form input[type="password"] {
+    border: none;
+    outline: none;
+    flex-grow: 1;
+    padding: 5px 0;
+    font-size: 1em;
+}
+
+.enter-button {
+    background-color: #004d99;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: bold;
+    width: 100%;
+    margin-top: 10px;
+    transition: background-color 0.2s ease;
+}
+
+.enter-button:hover {
+    background-color: #003366;
+}
+
+.forgot-password {
+    margin-top: 15px;
+    font-size: 0.9em;
+}
+
+.forgot-password a {
+    color: #004d99;
+    text-decoration: none;
+}
+
+.forgot-password a:hover {
+    text-decoration: underline;
+}
+
+/* Tarjeta de Registro de Usuarios */
+.register-users {
+    text-align: center;
+}
+
+.register-users h3 {
+    margin-bottom: 15px;
+}
+
+.register-image-main {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.register-button {
+    background-color: #d9534f; /* Rojo */
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 5px;
+    font-size: 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: background-color 0.2s ease;
+}
+
+.register-button:hover {
+    background-color: #c9302c;
+}
+
+/* Tarjeta de Reenvío de Comprobante */
+.resend-receipt {
+    text-align: center;
+    padding: 20px;
+}
+
+/* Estilos del Pie de Página */
+.main-footer {
+    background-color: #222;
+    color: #fff;
+    padding: 20px;
+    margin-top: 30px;
+    font-size: 0.9em;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    max-width: 1200px;
+    margin: 0 auto;
+    flex-wrap: wrap; /* Permite envolver en pantallas más pequeñas */
+    gap: 20px;
+}
+
+.footer-left img {
+    height: 40px;
+    margin-bottom: 5px;
+}
+
+.footer-left p {
+    margin: 0;
+    line-height: 1.4;
+}
+
+.footer-center {
+    text-align: center;
+    flex-grow: 1; /* Permite que ocupe el espacio disponible */
+}
+
+.footer-center p {
+    margin: 0;
+}
+
+.footer-right {
+    text-align: right;
+}
+
+.footer-right h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #f0ad4e; /* Naranja para el encabezado de contacto */
+}
+
+.footer-right p {
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Responsividad Básica (ajustar según sea necesario) */
+@media (max-width: 992px) {
+    .main-content-grid {
+        grid-template-columns: 1fr; /* Apilar columnas en pantallas más pequeñas */
+    }
+    .main-container {
+        flex-direction: column;
+    }
+    .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #cfd8e3;
+        padding-bottom: 0;
+    }
+    .sidebar-title {
+        border-radius: 0; /* Eliminar esquinas redondeadas */
+    }
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    .footer-left, .footer-right {
+        text-align: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .top-nav ul {
+        margin-top: 10px;
+    }
+    .top-nav li {
+        margin-left: 0;
+        margin-right: 15px;
+    }
+    .content-area {
+        padding: 15px;
+    }
+    .button-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .button-group .button {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    .service-details {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    .service-icon {
+        margin-left: 0;
+    }
+    .action-button {
+        display: block;
+        width: 80%;
+        margin: 5px auto;
+    }
+}
