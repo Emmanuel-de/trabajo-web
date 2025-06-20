@@ -39,20 +39,16 @@ class AuthController extends Controller
                 ->withInput($request->except('password'));
         }
 
-        // Intentar autenticación
+        // Determinar el campo de login (email o username)
+        // Se asume que 'usuario' puede ser tanto email como username
+        $loginField = filter_var($request->input('usuario'), FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
         $credentials = [
-            'email' => $request->usuario, // Asumiendo que el usuario es email
+            $loginField => $request->usuario,
             'password' => $request->password,
         ];
 
-        // También intentar con username si tienes ese campo
-        if (!Auth::attempt($credentials)) {
-            $credentials = [
-                'username' => $request->usuario,
-                'password' => $request->password,
-            ];
-        }
-
+        // Intentar autenticación
         if (Auth::attempt($credentials, $request->filled('remember'))) {
             // Regenerar sesión por seguridad
             $request->session()->regenerate();
@@ -64,12 +60,12 @@ class AuthController extends Controller
             session(['user_name' => $user->name]);
             
             // Redireccionar a la página de usuario
-            return redirect()->intended('/usuario')->with('success', 'Bienvenido ' . $user->name);
+            return redirect()->intended(route('usuario'))->with('success', 'Bienvenido ' . $user->name);
         }
 
-        // Si la autenticación falla
+        // Si la autenticación falla, redirige de vuelta con un mensaje de error personalizado
         return redirect()->back()
-            ->withErrors(['login' => 'Las credenciales proporcionadas no coinciden con nuestros registros.'])
+            ->withErrors(['login' => 'Tu usuario o contraseña son incorrectos.']) // Mensaje de error modificado aquí
             ->withInput($request->except('password'));
     }
 
@@ -83,7 +79,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         
-        return redirect('/')->with('success', 'Sesión cerrada correctamente.');
+        return redirect()->route('homepage')->with('success', 'Sesión cerrada correctamente.');
     }
 
     /**
@@ -133,7 +129,8 @@ class AuthController extends Controller
         // Autenticar automáticamente al usuario
         Auth::login($user);
 
-        return redirect('/usuario')->with('success', 'Registro exitoso. Bienvenido ' . $user->name);
+        return redirect()->route('usuario')->with('success', 'Registro exitoso. Bienvenido ' . $user->name);
     }
 }
+
 

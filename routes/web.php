@@ -3,7 +3,14 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ProfileController; // Asegúrate de que este controlador exista y tenga los métodos 'show' y 'update'
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AyudaController;
+use App\Http\Controllers\PromocionController;
+use App\Http\Controllers\CustomPasswordController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\ExpedienteController;
+use App\Http\Controllers\UsuarioController; // ¡Importa el UsuarioController!
 
 /*
 |--------------------------------------------------------------------------
@@ -16,61 +23,78 @@ use App\Http\Controllers\ProfileController; // Asegúrate de que este controlado
 |
 */
 
-// Ruta para la página principal. Redirige a dashboard si está autenticado,
-// de lo contrario muestra la página de inicio/login.
+// Rutas de autenticación y acceso público (sin requerir login)
 Route::get('/', function () {
     if (auth()->check()) {
-        return redirect()->route('usuario'); // Redirige a la ruta con nombre 'usuario'
+        return redirect()->route('usuario');
     }
-    return view('homepage'); // Muestra la vista 'homepage' que probablemente es tu formulario de login
-})->name('homepage'); // Cambiado a 'homepage' para consistencia con redirección de logout
+    return view('homepage');
+})->name('homepage');
 
-// Ruta alternativa para mostrar el formulario de login explícitamente.
-// También redirige si el usuario ya está autenticado.
 Route::get('/login', function () {
     if (auth()->check()) {
         return redirect()->route('usuario');
     }
-    return view('homepage'); // Muestra la misma vista que la raíz para login
+    return view('homepage');
 })->name('login.form');
 
-// Ruta para procesar el login
 Route::post('/login', [AuthController::class, 'login'])->name('login');
-
-// Ruta para logout
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Rutas para el registro
 Route::get('/registro', [RegisterController::class, 'showRegistrationForm'])->name('registro');
 Route::post('/registro', [RegisterController::class, 'register'])->name('registro.store');
 
+// Rutas para restablecimiento de contraseña
+Route::get('password/reset', [CustomPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('password.update');
+
+// RUTA DE AYUDA: Ahora es accesible públicamente
+Route::get('/ayuda', function() {
+    return view('homeayuda');
+})->name('homeayuda');
+
+
+// RUTA DE BUZÓN: Se mantiene accesible públicamente.
+Route::get('/buzon', function() {
+    return view('buzon');
+})->name('buzon');
+
+
+// RUTA DE SOPORTE: Accesible públicamente para la página de soporte.
+Route::get('/soporte', function() {
+    return view('soporte');
+})->name('soporte');
+
+
 // Rutas protegidas (requieren autenticación)
 Route::middleware(['auth'])->group(function () {
     // Página principal del usuario autenticado (Dashboard)
-    Route::get('/usuario', function () {
-        return view('usuario');
-    })->name('usuario');
+    // CAMBIO APLICADO AQUÍ: La ruta 'usuario' ahora apunta al UsuarioController
+    Route::get('/usuario', [UsuarioController::class, 'index'])->name('usuario');
     
-    // Otras rutas del sistema judicial que requieren autenticación
+    // Rutas de Promociones
+    // Ruta para mostrar la lista general de promociones (o la vista "promociones.blade.php")
     Route::get('/promociones', function () {
-        return view('promociones');
-    })->name('promociones');
+        return view('promociones'); // Asume que 'promociones.blade.php' es la vista general
+    })->name('promociones.index');
+
+    // Ruta para mostrar el formulario de crear nueva promoción
+    Route::get('/promociones/nueva', [PromocionController::class, 'create'])->name('promociones.create');
+    // Ruta POST para almacenar la nueva promoción
+    Route::post('/promociones', [PromocionController::class, 'store'])->name('promociones.store');
     
-    Route::get('/expedientes', function () {
-        return view('expedientes');
-    })->name('expedientes');
+    // Rutas de Expedientes
+    Route::get('/expedientes', [ExpedienteController::class, 'create'])->name('expedientes.create');
+    Route::post('/expedientes', [ExpedienteController::class, 'store'])->name('expedientes.store');
+    // NUEVA RUTA PARA ACTUALIZAR EXPEDIENTES DESDE EL MODAL (usando PUT para RESTful update)
+    Route::put('/expedientes/{expediente}/update-modal', [ExpedienteController::class, 'updateFromModal'])->name('expedientes.update_modal');
 
     // Rutas para el perfil de usuario usando ProfileController
-    // Se elimina la ruta de closure duplicada y se usa el controlador
-    Route::get('/perfil', [ProfileController::class, 'show'])->name('perfil'); // Para mostrar el perfil
-    Route::put('/perfil', [ProfileController::class, 'update'])->name('perfil.update'); // Para actualizar el perfil (requiere PUT/PATCH)
-
-    // Ruta para la página de ayuda
-    Route::get('/ayuda', function () {
-        // Pasa el usuario si la vista de ayuda lo necesita
-        $user = Auth::user(); 
-        return view('ayuda', compact('user'));
-    })->name('ayuda'); 
+    Route::get('/perfil', [ProfileController::class, 'show'])->name('perfil');
+    Route::put('/perfil', [ProfileController::class, 'update'])->name('perfil.update');
 
     // Aquí puedes añadir cualquier otra ruta que solo deba ser accesible por usuarios autenticados
 });
