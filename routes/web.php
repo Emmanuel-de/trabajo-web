@@ -68,7 +68,7 @@ Route::get('/soporte', function() {
     return view('soporte');
 })->name('soporte');
 
-
+ Route::resource('expedientes', ExpedienteController::class);
 // Rutas protegidas (requieren autenticación)
 Route::middleware(['auth'])->group(function () {
     // Página principal del usuario autenticado (Dashboard)
@@ -86,15 +86,18 @@ Route::middleware(['auth'])->group(function () {
     // Ruta POST para almacenar la nueva promoción
     Route::post('/promociones', [PromocionController::class, 'store'])->name('promociones.store');
     
-    // Rutas de Expedientes
-    Route::get('/expedientes', [ExpedienteController::class, 'create'])->name('expedientes.create');
-    Route::post('/expedientes', [ExpedienteController::class, 'store'])->name('expedientes.store');
+    // Rutas de Expedientes (¡Esta es la clave para el error que tenías!)
+    // Ruta para mostrar la lista de expedientes
+    Route::get('/expedientes', [ExpedienteController::class, 'index'])->name('expedientes.index');
+    // Ruta para actualizar un expediente desde el modal (usada en usuario.blade.php)
+    Route::put('/expedientes/{expediente}/update-modal', [ExpedienteController::class, 'updateFromModal'])->name('expedientes.updateFromModal');
     // NUEVA RUTA PARA ACTUALIZAR EXPEDIENTES DESDE EL MODAL (usando PUT para RESTful update)
-    Route::put('/expedientes/{expediente}/update-modal', [ExpedienteController::class, 'updateFromModal'])->name('expedientes.update_modal');
-
+    
+    Route::post('/expedientes/{expediente}/update-modal', [ExpedienteController::class, 'updateFromModal'])->name('expedientes.updateFromModal');
     // Rutas para el perfil de usuario usando ProfileController
     Route::get('/perfil', [ProfileController::class, 'show'])->name('perfil');
     Route::put('/perfil', [ProfileController::class, 'update'])->name('perfil.update');
 
     // Aquí puedes añadir cualquier otra ruta que solo deba ser accesible por usuarios autenticados
+
 });

@@ -294,7 +294,7 @@
                             <i class="fas fa-file-contract me-2"></i> Promociones Electrónicas
                         </a>
                         {{-- CORRECCIÓN AQUÍ: Cambiado de 'expedientes' a 'expedientes.create' --}}
-                        <a href="{{ route('expedientes.create') }}" class="list-group-item list-group-item-action">
+                        <a href="{{ route('expedientes.index') }}" class="list-group-item list-group-item-action">
                             <i class="fas fa-folder-open me-2"></i> Mis Expedientes
                         </a>
                         <a href="#" class="list-group-item list-group-item-action">

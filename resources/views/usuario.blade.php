@@ -282,7 +282,7 @@
                             <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Configuración</a></li>
                             <li><a class="dropdown-item" href="#"><i class="fas fa-envelope me-2"></i>Mensajes</a></li>
                             <li><a class="dropdown-item" href="#"><i class="fas fa-bell me-2"></i>Notificaciones</a></li>
-                            <li><a class="dropdown-item" href="{{ route('homeayuda') }}"><i class="fas fa-question-circle me-2"></i>Ayuda</a></li>
+                            <li><a class="dropdown-item" href="{{ route('soporte') }}"><i class="fas fa-question-circle me-2"></i>soporte</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form method="POST" action="{{ route('logout') }}" class="d-inline">
@@ -311,10 +311,10 @@
                         <a href="{{ route('usuario') }}" class="list-group-item list-group-item-action active" aria-current="true">
                             <i class="fas fa-home me-2"></i> Dashboard
                         </a>
-                        <a href="{{ route('promociones.index') }}" class="list-group-item list-group-item-action">
+                        <a href="{{ route('promociones.index') }}" class="list-group-item list-group-item-action"> {{-- Ruta corregida --}}
                             <i class="fas fa-file-contract me-2"></i> Promociones Electrónicas
                         </a>
-                        <a href="{{ route('expedientes.create') }}" class="list-group-item list-group-item-action">
+                        <a href="{{ route('expedientes.index') }}" class="list-group-item list-group-item-action"> {{-- Ruta corregida --}}
                             <i class="fas fa-folder-open me-2"></i> Mis Expedientes
                         </a>
                         <a href="#" class="list-group-item list-group-item-action">
@@ -383,7 +383,7 @@
                                     <div>
                                         <i class="fas fa-folder-open display-4 text-success mb-2"></i>
                                         <h5 class="card-title">Expedientes</h5>
-                                        <h3 class="text-success fw-bold">0</h3>
+                                        <h3 class="text-success fw-bold">{{ $totalExpedientesCount ?? '0' }}</h3>
                                         <small class="text-muted">Expedientes asignados</small>
                                     </div>
                                 </div>
@@ -442,7 +442,7 @@
                                             <tbody>
                                                 {{-- INICIO: Bucle para mostrar los expedientes recientes --}}
                                                 @forelse($expedientesRecientes as $expediente)
-                                                <tr>
+                                                <tr data-expediente-id="{{ $expediente->id }}"> {{-- ¡IMPORTANTE! Añadido data-expediente-id a la fila para una fácil selección --}}
                                                     <td>{{ $expediente->numero_expediente }}</td>
                                                     <td>{{ $expediente->juzgado }}</td>
                                                     <td>{{ $expediente->juicio }}</td>
@@ -479,7 +479,7 @@
                                     </div>
 
                                     <div class="text-center mt-3">
-                                        <a href="{{ route('promociones.index') }}" class="btn btn-primary rounded-md">
+                                        <a href="{{ route('promociones.index') }}" class="btn btn-primary rounded-md"> {{-- Ruta corregida --}}
                                             <i class="fas fa-eye me-2"></i> Ver Todas las Promociones
                                         </a>
                                     </div>
@@ -494,10 +494,10 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="d-grid gap-3"> <!-- Aumentado el gap entre botones -->
-                                        <a href="{{ route('promociones.create') }}" class="btn btn-outline-primary btn-lg"> <!-- Botones más grandes -->
+                                        <a href="{{ route('promociones.create') }}" class="btn btn-outline-primary btn-lg"> <!-- Botones más grandes --> {{-- Ruta corregida --}}
                                             <i class="fas fa-plus-circle me-2"></i> Nueva Promoción Electrónica
                                         </a>
-                                        <a href="{{ route('expedientes.create') }}" class="btn btn-outline-success btn-lg">
+                                        <a href="{{ route('expedientes.index') }}" class="btn btn-outline-success btn-lg"> {{-- Cambiado a index para ver lista/buscar --}}
                                             <i class="fas fa-search-plus me-2"></i> Consultar Expediente
                                         </a>
                                         <a href="#" class="btn btn-outline-info btn-lg">
@@ -658,15 +658,26 @@
         // Pasar los datos de los expedientes directamente a JavaScript
         const expedientesData = @json($expedientesRecientes);
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        // Referencias a los elementos del modal y errores, inicializadas en DOMContentLoaded
+        let expedienteDetailModalElement;
+        let modalValidationErrorsDiv; 
 
         // Función para alternar entre el modo de vista y edición en el modal
         function toggleModalEditMode(isEditMode) {
-            const modal = document.getElementById('expedienteDetailModal');
+            // Se asume que expedienteDetailModalElement ya fue inicializado en DOMContentLoaded
+            if (!expedienteDetailModalElement) {
+                console.error("Error: 'expedienteDetailModalElement' no está definido al llamar a toggleModalEditMode. El modal podría no haberse cargado correctamente.");
+                return; // Salir de la función si el modal no existe
+            }
+
             if (isEditMode) {
-                modal.classList.add('edit-active');
+                expedienteDetailModalElement.classList.add('edit-active');
             } else {
-                modal.classList.remove('edit-active');
-                document.getElementById('modal-validation-errors').classList.add('d-none'); // Ocultar errores al salir del modo edición
+                expedienteDetailModalElement.classList.remove('edit-active');
+                if (modalValidationErrorsDiv) { // Solo si el div de errores también se encontró
+                    modalValidationErrorsDiv.classList.add('d-none'); // Ocultar errores al salir del modo edición
+                }
             }
         }
 
@@ -717,7 +728,99 @@
             document.getElementById('editObservaciones').value = expediente.observaciones || '';
         }
 
+        // Función para mostrar errores de validación
+        function showValidationErrors(errors) {
+            if (!modalValidationErrorsDiv) {
+                console.error('Validation errors div not found to display errors!');
+                return;
+            }
+            const errorsList = modalValidationErrorsDiv.querySelector('ul');
+            if (!errorsList) {
+                console.error('Validation errors list (ul) not found to display errors!');
+                return;
+            }
+            errorsList.innerHTML = ''; // Clear previous errors
+
+            for (const field in errors) {
+                errors[field].forEach(error => {
+                    const li = document.createElement('li');
+                    li.textContent = error;
+                    errorsList.appendChild(li);
+                });
+            }
+            modalValidationErrorsDiv.classList.remove('d-none');
+        }
+
+        // Función para ocultar errores de validación
+        function hideValidationErrors() {
+            if (modalValidationErrorsDiv) {
+                modalValidationErrorsDiv.classList.add('d-none');
+            }
+        }
+
+        // Función para actualizar la fila de la tabla (¡CORRECCIÓN CLAVE AQUÍ!)
+        function updateTableRow(expedienteId, updatedData) {
+            // Se busca directamente la fila TR usando el data-expediente-id
+            const rowToUpdate = document.querySelector(`tr[data-expediente-id="${expedienteId}"]`);
+            if (!rowToUpdate) {
+                console.warn('WARNING: Table row not found in DOM for ID:', expedienteId, '. La fila de la tabla no se actualizará visualmente. Esto puede ocurrir si el contenido de la tabla se vuelve a renderizar por otros medios después de la carga inicial de la página.');
+                return false; // Retorna falso si no se encuentra la fila
+            }
+
+            // Actualizar las celdas de la tabla
+            rowToUpdate.children[0].textContent = updatedData.numero_expediente; // Columna Expediente
+            rowToUpdate.children[1].textContent = updatedData.juzgado; // Columna Juzgado
+            rowToUpdate.children[2].textContent = updatedData.juicio; // Columna Materia (Juicio)
+
+            // Actualizar el estado con el badge
+            let newEstadoBadge = '';
+            switch(updatedData.estado_actual) {
+                case 'en_tramite':
+                    newEstadoBadge = '<span class="badge bg-warning text-dark">En Trámite</span>';
+                    break;
+                case 'finalizado':
+                    newEstadoBadge = '<span class="badge bg-success">Finalizado</span>';
+                    break;
+                case 'archivado':
+                    newEstadoBadge = '<span class="badge bg-secondary">Archivado</span>';
+                    break;
+                case 'pausado':
+                    newEstadoBadge = '<span class="badge bg-info">Pausado</span>';
+                    break;
+                default:
+                    newEstadoBadge = '<span class="badge bg-light text-dark">Desconocido</span>';
+            }
+            rowToUpdate.children[3].innerHTML = newEstadoBadge; // Columna Estado (asumiendo que es la 4ta columna, índice 3)
+
+            return true; // Retorna verdadero si se actualizó
+        }
+
+
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing event listeners...');
+
+            // ***** PUNTOS CRÍTICOS DE INICIALIZACIÓN *****
+            expedienteDetailModalElement = document.getElementById('expedienteDetailModal');
+            modalValidationErrorsDiv = document.getElementById('modal-validation-errors');
+            const saveBtn = document.getElementById('saveChangesBtn');
+            const editForm = document.getElementById('editExpedienteForm');
+            const toggleEditModeBtn = document.getElementById('toggleEditModeBtn');
+            const cancelEditBtn = document.getElementById('cancelEditBtn');
+
+            if (!expedienteDetailModalElement) {
+                console.error("CRÍTICO: El modal con ID 'expedienteDetailModal' NO FUE ENCONTRADO en el DOM al cargar la página. Funcionalidad de modal no disponible.");
+                return; 
+            } else {
+                console.log("INFO: Modal 'expedienteDetailModal' encontrado y referenciado.");
+            }
+            if (!saveBtn) { console.error("CRÍTICO: Botón 'saveChangesBtn' NO FUE ENCONTRADO."); return; }
+            if (!editForm) { console.error("CRÍTICO: Formulario 'editExpedienteForm' NO FUE ENCONTRADO."); return; }
+            if (!toggleEditModeBtn) { console.warn("WARNING: Botón 'toggleEditModeBtn' no encontrado."); }
+            if (!cancelEditBtn) { console.warn("WARNING: Botón 'cancelEditBtn' no encontrado."); }
+            if (!modalValidationErrorsDiv) { console.warn("WARNING: Div de errores 'modal-validation-errors' no encontrado."); }
+            
+            console.log('All required elements found, proceeding with initialization...');
+
             // Auto-hide alerts after 5 seconds
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(function(alert) {
@@ -730,6 +833,7 @@
             // Event listener para los botones "Ver Detalles"
             document.querySelectorAll('.view-expediente-btn').forEach(button => {
                 button.addEventListener('click', function() {
+                    console.log('View button clicked for expediente:', this.dataset.expedienteId);
                     const expedienteId = this.dataset.expedienteId;
                     const expediente = expedientesData.find(exp => exp.id == expedienteId);
 
@@ -737,144 +841,152 @@
                         populateModalViewMode(expediente);
                         populateModalEditMode(expediente); // Rellena también los campos de edición, aunque estén ocultos
                         toggleModalEditMode(false); // Asegúrate de que el modal esté en modo vista al abrir
+                        hideValidationErrors(); // Limpiar errores anteriores
+                    } else {
+                        console.error('Expediente not found with ID:', expedienteId);
                     }
                 });
             });
 
             // Event listener para el botón "Editar Expediente" dentro del modal
-            document.getElementById('toggleEditModeBtn').addEventListener('click', function() {
-                toggleModalEditMode(true); // Cambia a modo edición
-            });
-
+            if (toggleEditModeBtn) {
+                toggleEditModeBtn.addEventListener('click', function() {
+                    console.log('Edit mode toggle clicked');
+                    toggleModalEditMode(true); // Cambia a modo edición
+                    hideValidationErrors(); // Limpiar errores al entrar en modo edición
+                });
+            }
+            
             // Event listener para el botón "Cancelar" en el modo de edición del modal
-            document.getElementById('cancelEditBtn').addEventListener('click', function() {
-                toggleModalEditMode(false); // Vuelve a modo vista
-            });
+            if (cancelEditBtn) {
+                cancelEditBtn.addEventListener('click', function() {
+                    console.log('Cancel edit clicked');
+                    toggleModalEditMode(false); // Vuelve a modo vista
+                    hideValidationErrors(); // Limpiar errores al cancelar
+                });
+            }
 
             // Event listener para el botón "Guardar Cambios" en el modo de edición del modal
-            document.getElementById('saveChangesBtn').addEventListener('click', async function() {
-                const expedienteId = document.getElementById('editExpedienteId').value;
-                const url = `/expedientes/${expedienteId}/update-modal`; // Usa la nueva ruta
-                const form = document.getElementById('editExpedienteForm');
-                const formData = new FormData(form);
-                const errorsDiv = document.getElementById('modal-validation-errors');
-                const errorsList = errorsDiv.querySelector('ul');
-                errorsList.innerHTML = ''; // Limpiar errores anteriores
-                errorsDiv.classList.add('d-none'); // Ocultar div de errores
+            if (saveBtn) {
+                saveBtn.addEventListener('click', async function() {
+                    console.log('Save changes button clicked');
 
-                // Añadir el método PUT/PATCH, ya que FormData no lo incluye
-                formData.append('_method', 'PUT'); // O 'PATCH'
-
-                console.log('Enviando solicitud para expediente ID:', expedienteId);
-                console.log('Datos del formulario a enviar:');
-                for (let pair of formData.entries()) {
-                    console.log(pair[0]+ ': ' + pair[1]);
-                }
-
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST', // Usar POST para _method PUT/PATCH
-                        headers: {
-                            'X-CSRF-TOKEN': csrfToken,
-                            // No Content-Type aquí si usas FormData, fetch lo ajusta automáticamente
-                        },
-                        body: formData,
-                    });
-
-                    const result = await response.json();
-                    
-                    console.log('Response status:', response.status);
-                    console.log('Response result:', result);
-
-                    if (response.ok) {
-                        // Actualizar los datos en la lista `expedientesData` para que el modal se actualice
-                        // sin recargar la página (aunque una recarga simple también funcionaría).
-                        const updatedExpediente = expedientesData.find(exp => exp.id == expedienteId);
-                        if (updatedExpediente) {
-                            // Copiar los datos actualizados del formulario al objeto en memoria
-                            for (let [key, value] of formData.entries()) {
-                                if (key !== '_method' && key !== '_token') {
-                                    updatedExpediente[key] = value;
-                                }
-                            }
-                            // Asegurarse de que la fecha en el objeto JS esté en formato YYYY-MM-DD
-                            if (updatedExpediente.fecha_inicio) {
-                                const d = new Date(updatedExpediente.fecha_inicio + 'T00:00:00'); // Añadir 'T00:00:00' para evitar problemas de zona horaria
-                                updatedExpediente.fecha_inicio = d.toISOString().split('T')[0];
-                            }
-                        }
-
-                        // *** NUEVOS CONSOLE.LOGS AQUÍ PARA DEPURACIÓN ***
-                        console.log('Attempting to find button for expediente ID:', expedienteId);
-                        const targetButton = document.querySelector(`button[data-expediente-id="${expedienteId}"]`);
-                        console.log('Target button found:', targetButton);
-
-                        if (!targetButton) {
-                            console.error('ERROR: Button not found in DOM for ID:', expedienteId, '. The table row cannot be updated visually. Consider reloading the page.');
-                            // Fallback: perhaps alert the user or just proceed without live table update
-                            alert(result.message + ' (Nota: La tabla no se actualizó automáticamente, por favor, recargue la página).');
-                            toggleModalEditMode(false); // Volver al modo vista
-                            return; // Salir si el botón no se encuentra para evitar el error.
-                        }
-
-                        // Actualizar la fila en la tabla del dashboard
-                        const rowToUpdate = targetButton.closest('tr'); // Ahora sabemos que targetButton no es null
-                        
-                        rowToUpdate.children[0].textContent = updatedExpediente.numero_expediente; // Columna Expediente
-                        rowToUpdate.children[1].textContent = updatedExpediente.juzgado; // Columna Juzgado
-                        rowToUpdate.children[2].textContent = updatedExpediente.juicio; // Columna Materia (Juicio)
-                        // Actualizar el estado con el badge, replicando la lógica de Blade
-                        let newEstadoBadge = '';
-                        switch(updatedExpediente.estado_actual) {
-                            case 'en_tramite':
-                                newEstadoBadge = '<span class="badge bg-warning text-dark">En Trámite</span>';
-                                break;
-                            case 'finalizado':
-                                newEstadoBadge = '<span class="badge bg-success">Finalizado</span>';
-                                break;
-                            case 'archivado':
-                                newEstadoBadge = '<span class="badge bg-secondary">Archivado</span>';
-                                break;
-                            case 'pausado':
-                                newEstadoBadge = '<span class="badge bg-info">Pausado</span>';
-                                break;
-                            default:
-                                newEstadoBadge = '<span class="badge bg-light text-dark">Desconocido</span>';
-                        }
-                        rowToUpdate.children[3].innerHTML = newEstadoBadge; // Columna Estado
-                        
-                        populateModalViewMode(updatedExpediente); // Actualiza el modo vista del modal con los nuevos datos
-                        toggleModalEditMode(false); // Volver al modo vista
-                        alert(result.message); // Usar alert solo para este ejemplo, considerar un toast o modal de confirmación
-                        // Si es necesario, recarga la página completamente después de un éxito (menos ideal para UX)
-                        // window.location.reload(); 
-                    } else if (response.status === 422 && result.errors) {
-                        // Errores de validación
-                        errorsDiv.classList.remove('d-none');
-                        for (const field in result.errors) {
-                            result.errors[field].forEach(error => {
-                                const li = document.createElement('li');
-                                li.textContent = error;
-                                errorsList.appendChild(li);
-                            });
-                        }
-                    } else {
-                        // Otros errores (ej. 403, 500)
-                        alert('Error: ' + (result.message || 'Hubo un error inesperado al guardar los cambios. Por favor, revisa la consola para más detalles.'));
-                        // Considera cerrar el modal o dejarlo en modo edición para que el usuario pueda corregir
+                    const expedienteId = document.getElementById('editExpedienteId').value;
+                    if (!expedienteId) {
+                        console.error('No expediente ID found');
+                        alert('Error: No se pudo identificar el expediente a actualizar.');
+                        return;
                     }
 
-                } catch (error) {
-                    console.error('Error de red o inesperado al guardar cambios:', error);
-                    alert('Error de conexión o inesperado al guardar los cambios. Por favor, revisa la consola para más detalles.');
-                }
-            });
+                    // Deshabilitar el botón mientras se procesa
+                    saveBtn.disabled = true;
+                    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Guardando...';
 
-             // Cuando el modal se cierra, asegurar que regrese al modo de vista
-            const expedienteModalElement = document.getElementById('expedienteDetailModal');
-            expedienteModalElement.addEventListener('hidden.bs.modal', function () {
-                toggleModalEditMode(false);
-            });
+                    hideValidationErrors(); // Limpiar errores anteriores
+
+                    try {
+                        // Construir la URL - asegúrate de que esta ruta existe en tu Laravel routes
+                        // Se usa POST pero se simula PUT con _method: 'PUT'
+                        const url = `/expedientes/${expedienteId}/update-modal`; 
+
+                        // Obtener los datos del formulario manualmente y enviar como JSON
+                        const formData = {
+                            juzgado: document.getElementById('editJuzgado').value,
+                            numero_expediente: document.getElementById('editNumeroExpediente').value,
+                            juicio: document.getElementById('editJuicio').value,
+                            promovente: document.getElementById('editPromovente').value,
+                            demandado: document.getElementById('editDemandado').value,
+                            fecha_inicio: document.getElementById('editFechaInicio').value,
+                            estado_actual: document.getElementById('editEstadoActual').value,
+                            observaciones: document.getElementById('editObservaciones').value,
+                            _method: 'PUT', // Campo especial para Laravel para simular PUT/PATCH
+                            _token: csrfToken // CSRF token para seguridad
+                        };
+
+                        console.log('Sending data:', formData);
+
+                        const response = await fetch(url, {
+                            method: 'POST', // Siempre usa POST para Laravel con _method: 'PUT'
+                            headers: {
+                                'Content-Type': 'application/json', // Indicamos que enviamos JSON
+                                'Accept': 'application/json',      // Indicamos que esperamos JSON de vuelta
+                                'X-CSRF-TOKEN': csrfToken,         // Token CSRF en el encabezado
+                                'X-Requested-With': 'XMLHttpRequest' // Para que Laravel detecte que es una petición AJAX
+                            },
+                            body: JSON.stringify(formData) // Convertir el objeto JS a una cadena JSON
+                        });
+
+                        console.log('Response status:', response.status);
+
+                        const result = await response.json();
+                        console.log('Response data:', result);
+
+                        if (response.ok) {
+                            // Actualizar los datos en el array `expedientesData` (local)
+                            const expedienteIndex = expedientesData.findIndex(exp => exp.id == expedienteId);
+                            if (expedienteIndex !== -1) {
+                                // Copiar los datos actualizados del formulario al objeto en memoria
+                                // Usamos Object.assign o el spread operator para fusionar objetos
+                                Object.assign(expedientesData[expedienteIndex], formData);
+                                // No es necesario borrar _method y _token de la copia local, pero se puede hacer por limpieza
+                                delete expedientesData[expedienteIndex]._method;
+                                delete expedientesData[expedienteIndex]._token;
+                            }
+
+                            // Actualizar la fila visualmente en la tabla
+                            if (updateTableRow(expedienteId, expedientesData[expedienteIndex] || formData)) { // Pasa los datos actualizados
+                                console.log('Table updated successfully');
+                            } else {
+                                console.warn('Table update failed for visual element, but data was saved in backend.');
+                            }
+
+                            // Actualizar la vista del modal con los datos nuevos
+                            populateModalViewMode(expedientesData[expedienteIndex] || formData);
+
+                            // Volver al modo vista
+                            toggleModalEditMode(false);
+
+                            // Mostrar mensaje de éxito (considera un toast en producción)
+                            alert(result.message || 'Expediente actualizado correctamente');
+
+                            // Si necesitas recargar la página completamente (menos ideal para UX)
+                            // window.location.reload(); 
+
+                        } else if (response.status === 422) {
+                            // Errores de validación (HTTP 422 Unprocessable Entity)
+                            console.log('Validation errors:', result.errors);
+                            if (result.errors) {
+                                showValidationErrors(result.errors);
+                            } else {
+                                alert('Error de validación: ' + (result.message || 'Datos inválidos'));
+                            }
+                        } else {
+                            // Otros errores del servidor (ej. 403 Forbidden, 500 Internal Server Error)
+                            console.error('Server error:', result);
+                            alert('Error del servidor: ' + (result.message || 'Error inesperado. Revisa la consola para más detalles.'));
+                        }
+
+                    } catch (error) {
+                        // Errores de red o inesperados (ej. CORS, JSON malformado)
+                        console.error('Network or unexpected error:', error);
+                        alert('Error de conexión o inesperado: ' + error.message);
+                    } finally {
+                        // Rehabilitar el botón
+                        saveBtn.disabled = false;
+                        saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Guardar Cambios';
+                    }
+                });
+            }
+
+            // Cuando el modal se cierra, asegurar que regrese al modo de vista
+            if (expedienteDetailModalElement) {
+                expedienteDetailModalElement.addEventListener('hidden.bs.modal', function () {
+                    console.log('Modal hidden, resetting to view mode');
+                    toggleModalEditMode(false);
+                    hideValidationErrors();
+                });
+            }
+            console.log('Event listeners initialized successfully');
         });
     </script>
 </body>

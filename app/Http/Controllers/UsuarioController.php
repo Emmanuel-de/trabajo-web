@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Expediente; // Importa el modelo Expediente
+use App\Models\Expediente; // Asegúrate de que el modelo Expediente esté importado
 
 class UsuarioController extends Controller
 {
@@ -14,7 +14,7 @@ class UsuarioController extends Controller
     }
 
     /**
-     * Muestra el dashboard del usuario con sus expedientes recientes.
+     * Muestra el dashboard del usuario con sus expedientes recientes y el conteo total.
      *
      * @return \Illuminate\View\View
      */
@@ -22,16 +22,18 @@ class UsuarioController extends Controller
     {
         $user = Auth::user();
 
-        // Si el usuario no está autenticado por alguna razón (aunque el middleware 'auth' debería evitar esto),
-        // o si no tiene expedientes, aseguramos que $expedientesRecientes sea una colección vacía.
+        // Inicializa las variables para evitar errores si el usuario no tiene expedientes o no está autenticado.
         $expedientesRecientes = collect(); 
+        $totalExpedientesCount = 0; // Inicializa el contador a 0
 
         if ($user) {
-            // Obtener los expedientes del usuario autenticado, ordenados por fecha de creación descendente
-            // y limitar a, por ejemplo, 5 expedientes recientes para el dashboard.
+            // Obtener los 5 expedientes más recientes del usuario autenticado para la tabla del dashboard.
             $expedientesRecientes = $user->expedientes()->latest()->take(5)->get();
+            // Conteo total de expedientes del usuario autenticado.
+            $totalExpedientesCount = $user->expedientes()->count();
         }
         
-        return view('usuario', compact('user', 'expedientesRecientes'));
+        // Pasa todas las variables necesarias a la vista en una única sentencia return.
+        return view('usuario', compact('user', 'expedientesRecientes', 'totalExpedientesCount'));
     }
 }

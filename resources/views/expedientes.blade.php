@@ -198,7 +198,7 @@
                             <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Configuración</a></li>
                             <li><a class="dropdown-item" href="{{ route('buzon') }}"><i class="fas fa-envelope me-2"></i>Mensajes</a></li>
                             <li><a class="dropdown-item" href="#"><i class="fas fa-bell me-2"></i>Notificaciones</a></li>
-                            <li><a class="dropdown-item" href="{{ route('homeayuda') }}"><i class="fas fa-question-circle me-2"></i>Ayuda</a></li>
+                            <li><a class="dropdown-item" href="{{ route('soporte') }}"><i class="fas fa-question-circle me-2"></i>Soporte</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form method="POST" action="{{ route('logout') }}" class="d-inline">
@@ -245,8 +245,8 @@
                         <a href="#" class="list-group-item list-group-item-action">
                             <i class="fas fa-cogs me-2"></i> Configuración
                         </a>
-                        <a href="{{ route('homeayuda') }}" class="list-group-item list-group-item-action">
-                            <i class="fas fa-question-circle me-2"></i> Ayuda
+                        <a href="{{ route('soporte') }}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-question-circle me-2"></i> Soporte
                         </a>
                     </div>
 
