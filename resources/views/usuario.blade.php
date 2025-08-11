@@ -329,7 +329,7 @@
                     </div>
 
                     <div class="mt-4">
-                        
+
                     </div>
                 </div>
 
@@ -371,7 +371,7 @@
                                     <div>
                                         <i class="fas fa-file-alt display-4 text-primary mb-2"></i>
                                         <h5 class="card-title">Promociones</h5>
-                                        <h3 class="text-primary fw-bold">0</h3>
+                                        <h3 class="text-primary fw-bold">{{ $promocionesCount ?? 0 }}</h3>
                                         <small class="text-muted">Promociones activas</small>
                                     </div>
                                 </div>
@@ -644,7 +644,7 @@
                         <button type="button" class="btn btn-secondary rounded-md me-2" data-bs-dismiss="modal">Cerrar</button>
                         <button type="button" class="btn btn-warning rounded-md" id="toggleEditModeBtn"><i class="fas fa-edit me-2"></i>Editar Expediente</button>
                     </div>
-                    <div id="modalEditModeButtons" class="w-100 d-flex justify-content-end"> 
+                    <div id="modalEditModeButtons" classw-100 d-flex justify-content-end"> 
                         <button type="button" class="btn btn-secondary rounded-md me-2" id="cancelEditBtn">Cancelar</button>
                         <button type="button" class="btn btn-primary rounded-md" id="saveChangesBtn"><i class="fas fa-save me-2"></i>Guardar Cambios</button>
                     </div>
@@ -652,13 +652,13 @@
             </div>
         </div>
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Pasar los datos de los expedientes directamente a JavaScript
         const expedientesData = @json($expedientesRecientes);
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        
+
         // Referencias a los elementos del modal y errores, inicializadas en DOMContentLoaded
         let expedienteDetailModalElement;
         let modalValidationErrorsDiv; 
@@ -688,7 +688,7 @@
             document.getElementById('viewJuicio').textContent = expediente.juicio;
             document.getElementById('viewPromovente').textContent = expediente.promovente;
             document.getElementById('viewDemandado').textContent = expediente.demandado;
-            
+
             const fechaInicio = new Date(expediente.fecha_inicio + 'T00:00:00'); // Añadir 'T00:00:00' para consistencia
             document.getElementById('viewFechaInicio').textContent = fechaInicio.toLocaleDateString('es-ES', {
                 day: '2-digit', month: '2-digit', year: 'numeric'
@@ -818,7 +818,7 @@
             if (!toggleEditModeBtn) { console.warn("WARNING: Botón 'toggleEditModeBtn' no encontrado."); }
             if (!cancelEditBtn) { console.warn("WARNING: Botón 'cancelEditBtn' no encontrado."); }
             if (!modalValidationErrorsDiv) { console.warn("WARNING: Div de errores 'modal-validation-errors' no encontrado."); }
-            
+
             console.log('All required elements found, proceeding with initialization...');
 
             // Auto-hide alerts after 5 seconds
@@ -856,7 +856,7 @@
                     hideValidationErrors(); // Limpiar errores al entrar en modo edición
                 });
             }
-            
+
             // Event listener para el botón "Cancelar" en el modo de edición del modal
             if (cancelEditBtn) {
                 cancelEditBtn.addEventListener('click', function() {

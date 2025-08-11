@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             // Datos personales
-            $table->string('nombre')->after('name');
             $table->string('apellido_paterno')->after('nombre');
             $table->string('apellido_materno')->nullable()->after('apellido_paterno');
             $table->enum('genero', ['masculino', 'femenino', 'otro'])->after('apellido_materno');
@@ -44,7 +43,6 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn([
-                'nombre',
                 'apellido_paterno', 
                 'apellido_materno',
                 'genero',

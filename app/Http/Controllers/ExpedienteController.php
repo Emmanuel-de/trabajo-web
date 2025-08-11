@@ -86,7 +86,7 @@ class ExpedienteController extends Controller
 
             Log::info('New expediente registered successfully.');
             // 3. Redirigir con un mensaje de éxito
-            return redirect()->route('expedientes.create')->with('success', '¡Expediente registrado exitosamente!');
+            return redirect()->route('usuario')->with('success', '¡Expediente registrado exitosamente!');
 
         } catch (\Exception $e) {
             // Manejar cualquier error que ocurra durante el guardado

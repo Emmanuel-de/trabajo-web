@@ -77,9 +77,7 @@ Route::middleware(['auth'])->group(function () {
     
     // Rutas de Promociones
     // Ruta para mostrar la lista general de promociones (o la vista "promociones.blade.php")
-    Route::get('/promociones', function () {
-        return view('promociones'); // Asume que 'promociones.blade.php' es la vista general
-    })->name('promociones.index');
+    Route::get('/promociones', [PromocionController::class, 'index'])->name('promociones.index');
 
     // Ruta para mostrar el formulario de crear nueva promoción
     Route::get('/promociones/nueva', [PromocionController::class, 'create'])->name('promociones.create');

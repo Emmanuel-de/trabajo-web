@@ -49,4 +49,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Expediente::class);
     }
+
+    public function promociones()
+    {
+        return $this->hasMany(Promocion::class);
+    }
 }

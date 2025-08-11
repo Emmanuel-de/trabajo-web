@@ -293,26 +293,48 @@
                                 <h5 class="section-title">
                                     <i class="fas fa-info-circle me-2"></i>Información del Expediente
                                 </h5>
-                                <div class="row g-2">
+
+                                <!-- Selector de Expediente -->
+                                <div class="row g-2 mb-3">
+                                    <div class="col-md-12">
+                                        <label class="form-label fw-bold">Seleccionar Expediente:</label>
+                                        <select class="form-select" id="expedienteSelector" name="expediente_id" required>
+                                            <option value="">-- Seleccione un expediente --</option>
+                                            @foreach($expedientes as $exp)
+                                                <option value="{{ $exp->id }}" 
+                                                        data-juzgado="{{ $exp->juzgado }}"
+                                                        data-numero="{{ $exp->numero_expediente }}"
+                                                        data-juicio="{{ $exp->juicio }}"
+                                                        data-promovente="{{ $exp->promovente }}"
+                                                        data-demandado="{{ $exp->demandado }}">
+                                                    {{ $exp->numero_expediente }} - {{ $exp->juicio }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Información del Expediente Seleccionado -->
+                                <div class="row g-2" id="expedienteInfo" style="display: none;">
                                     <div class="col-md-6">
                                         <label class="form-label fw-bold">Juzgado:</label>
-                                        <div class="info-display-static">MARCOS GARCÍA VÁZQUEZ TRIBUNAL ELECTRÓNICO (VICTORIA)</div>
+                                        <div class="info-display-static" id="infoJuzgado">-</div>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label fw-bold">Número de Expediente:</label>
-                                        <div class="info-display-static">00149/2011</div>
+                                        <div class="info-display-static" id="infoNumero">-</div>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label fw-bold">Juicio:</label>
-                                        <div class="info-display-static">EJECUTIVO MERCANTIL</div>
+                                        <div class="info-display-static" id="infoJuicio">-</div>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label fw-bold">Promovente(s):</label>
-                                        <div class="info-display-static">MARCOS GARCÍA VÁZQUEZ</div>
+                                        <div class="info-display-static" id="infoPromovente">-</div>
                                     </div>
-                                    <div class="col-12">
+                                    <div class="col-md-12">
                                         <label class="form-label fw-bold">Demandado(s):</label>
-                                        <div class="info-display-static">HOMERO ABDIELSELVA ZAVALA</div>
+                                        <div class="info-display-static" id="infoDemandado">-</div>
                                     </div>
                                 </div>
                             </div>
@@ -351,11 +373,32 @@ Nulla facilisi. Fusce vel mauris ultricies, eleifend eros vel, tristique purus. 
                                 <h5 class="section-title">
                                     <i class="fas fa-paperclip me-2"></i>Seleccione los archivos de anexos
                                 </h5>
+                                
+                                @if(session('promocion_generada_id'))
+                                    <div class="alert alert-info mb-3">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Se ha generado la promoción #{{ session('promocion_generada_id') }}. Puede agregar archivos anexos a esta promoción.
+                                        <input type="hidden" name="promocion_id" value="{{ session('promocion_generada_id') }}">
+                                    </div>
+                                @endif
+                                
                                 <div class="file-input-group">
                                     <input type="file" class="form-control" id="anexo_file" name="anexo_file">
-                                    <button type="submit" class="btn btn-secondary" name="action" value="subir_anexo">Subir</button>
+                                    <button type="submit" class="btn btn-secondary" name="action" value="subir_anexo">
+                                        @if(session('promocion_generada_id'))
+                                            Agregar a Promoción #{{ session('promocion_generada_id') }}
+                                        @else
+                                            Subir
+                                        @endif
+                                    </button>
                                 </div>
-                                <p class="text-muted">No hay archivos anexos para esta promoción electrónica.</p>
+                                <p class="text-muted">
+                                    @if(session('promocion_generada_id'))
+                                        Agregue archivos anexos a la promoción generada #{{ session('promocion_generada_id') }}.
+                                    @else
+                                        No hay archivos anexos para esta promoción electrónica.
+                                    @endif
+                                </p>
                                 @error('anexo_file') <div class="text-danger mt-1">{{ $message }}</div> @enderror
                             </div>
 
@@ -425,6 +468,41 @@ Nulla facilisi. Fusce vel mauris ultricies, eleifend eros vel, tristique purus. 
                     bsAlert.close();
                 }, 5000);
             });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const expedienteSelector = document.getElementById('expedienteSelector');
+            const expedienteInfo = document.getElementById('expedienteInfo');
+
+            // Actualizar información del expediente cuando se selecciona uno
+            expedienteSelector.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+
+                if (this.value) {
+                    // Mostrar información del expediente
+                    document.getElementById('infoJuzgado').textContent = selectedOption.dataset.juzgado || '-';
+                    document.getElementById('infoNumero').textContent = selectedOption.dataset.numero || '-';
+                    document.getElementById('infoJuicio').textContent = selectedOption.dataset.juicio || '-';
+                    document.getElementById('infoPromovente').textContent = selectedOption.dataset.promovente || '-';
+                    document.getElementById('infoDemandado').textContent = selectedOption.dataset.demandado || '-';
+
+                    expedienteInfo.style.display = 'block';
+
+                    // Actualizar todos los campos ocultos de expediente_id en los formularios
+                    updateAllFormExpedienteId(this.value);
+                } else {
+                    expedienteInfo.style.display = 'none';
+                }
+            });
+
+            function updateAllFormExpedienteId(expedienteId) {
+                // Buscar todos los inputs con name="expediente_id" y actualizarlos
+                const expedienteInputs = document.querySelectorAll('input[name="expediente_id"]');
+                expedienteInputs.forEach(input => {
+                    input.value = expedienteId;
+                });
+            }
         });
     </script>
 </body>
