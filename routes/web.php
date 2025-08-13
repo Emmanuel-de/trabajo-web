@@ -12,6 +12,7 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\ExpedienteController;
 use App\Http\Controllers\UsuarioController; // ¡Importa el UsuarioController!
 use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\NotificacionController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -74,7 +75,7 @@ Route::middleware(['auth'])->group(function () {
     // Página principal del usuario autenticado (Dashboard)
     // CAMBIO APLICADO AQUÍ: La ruta 'usuario' ahora apunta al UsuarioController
     Route::get('/usuario', [UsuarioController::class, 'index'])->name('usuario');
-    
+
     // Rutas de Promociones
     // Ruta para mostrar la lista general de promociones (o la vista "promociones.blade.php")
     Route::get('/promociones', [PromocionController::class, 'index'])->name('promociones.index');
@@ -83,45 +84,64 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/promociones/nueva', [PromocionController::class, 'create'])->name('promociones.create');
     // Ruta POST para almacenar la nueva promoción
     Route::post('/promociones', [PromocionController::class, 'store'])->name('promociones.store');
-    
+
     // Rutas de Expedientes (¡Esta es la clave para el error que tenías!)
     // Ruta para mostrar la lista de expedientes
     Route::get('/expedientes', [ExpedienteController::class, 'index'])->name('expedientes.index');
     // Ruta para actualizar un expediente desde el modal (usada en usuario.blade.php)
     Route::put('/expedientes/{expediente}/update-modal', [ExpedienteController::class, 'updateFromModal'])->name('expedientes.updateFromModal');
     // NUEVA RUTA PARA ACTUALIZAR EXPEDIENTES DESDE EL MODAL (usando PUT para RESTful update)
-    
+
     Route::post('/expedientes/{expediente}/update-modal', [ExpedienteController::class, 'updateFromModal'])->name('expedientes.updateFromModal');
-    
+
      // ===== RUTAS DE REPORTES =====
     // Ruta para mostrar la vista principal de reportes (generador y visor)
     Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
-    
+
     // Ruta para crear un nuevo reporte (POST)
     Route::post('/reportes', [ReporteController::class, 'store'])->name('reportes.store');
-    
+
     // Ruta para mostrar un reporte específico
     Route::get('/reportes/{reporte}', [ReporteController::class, 'show'])->name('reportes.show');
-    
+
     // Ruta para editar un reporte
     Route::get('/reportes/{reporte}/editar', [ReporteController::class, 'edit'])->name('reportes.edit');
     Route::put('/reportes/{reporte}', [ReporteController::class, 'update'])->name('reportes.update');
-    
+
     // Ruta para eliminar un reporte
     Route::delete('/reportes/{reporte}', [ReporteController::class, 'destroy'])->name('reportes.destroy');
-    
+
     // Ruta para exportar reportes (opcional - PDF, Excel, etc.)
     Route::get('/reportes/{reporte}/exportar', [ReporteController::class, 'export'])->name('reportes.export');
-    
+
     // Ruta para generar reportes automáticos por tipo
     Route::post('/reportes/generar/{tipo}', [ReporteController::class, 'generateByType'])->name('reportes.generateByType');
-    
+
     // Rutas para el perfil de usuario usando ProfileController
     Route::get('/perfil', [ProfileController::class, 'show'])->name('perfil');
     Route::put('/perfil', [ProfileController::class, 'update'])->name('perfil.update');
 
     // Aquí puedes añadir cualquier otra ruta que solo deba ser accesible por usuarios autenticados
 
+    // Vista principal: muestra la tabla y el formulario (debe pasar $notificaciones a la vista)
+    Route::get('/notificaciones', [NotificacionController::class, 'index'])
+        ->name('notificaciones.index');
+
+    // Crear nueva notificación (coincide con action="{{ route('notificaciones.store') }}" del form)
+    Route::post('/notificaciones', [NotificacionController::class, 'store'])
+        ->name('notificaciones.store');
+
+        Route::patch('/notificaciones/{id}/leer', [NotificacionController::class, 'markAsRead'])
+    ->name('notificaciones.markAsRead');
+
 });
 
-
+// Rutas para reportes
+Route::middleware('auth')->group(function () {
+    Route::resource('reportes', ReporteController::class);
+    Route::get('reportes/{reporte}/export', [ReporteController::class, 'export'])->name('reportes.export');
+    Route::post('reportes/generate/{tipo}', [ReporteController::class, 'generateByType'])->name('reportes.generate');
+    Route::get('reportes-trash', [ReporteController::class, 'trash'])->name('reportes.trash');
+    Route::post('reportes/{id}/restore', [ReporteController::class, 'restore'])->name('reportes.restore');
+    Route::delete('reportes/{id}/force-delete', [ReporteController::class, 'forceDelete'])->name('reportes.forceDelete');
+});

@@ -174,6 +174,29 @@
             color: #c82333;
         }
 
+        /* Estilos para modales de reportes */
+        .modal-header.bg-primary {
+            background-color: #1f5582 !important;
+        }
+        .modal-header.bg-warning {
+            background-color: #f0ad4e !important;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #1f5582;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+        .detail-value {
+            background-color: #f0f2f5;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.3rem;
+            margin-bottom: 0.75rem;
+            min-height: 2.5rem;
+            display: flex;
+            align-items: center;
+        }
+
         /* Estilos del pie de página */
         footer {
             background-color: #343a40;
@@ -226,7 +249,7 @@
                             <li><a class="dropdown-item" href="{{ route('perfil') }}"><i class="fas fa-file-alt me-2"></i>Mi Perfil</a></li>
                            
                             <li><a class="dropdown-item" href="{{ route('buzon') }}"><i class="fas fa-envelope me-2"></i>Mensajes</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-bell me-2"></i>Notificaciones</a></li>
+                            <li><a class="dropdown-item" href="{{ route('notificaciones.index') }}"><i class="fas fa-bell me-2"></i>Notificaciones</a></li>
                             <li><a class="dropdown-item" href="{{ route('soporte') }}"><i class="fas fa-question-circle me-2"></i>Soporte</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
@@ -262,7 +285,7 @@
                         <a href="{{ route('expedientes.index') }}" class="list-group-item list-group-item-action">
                             <i class="fas fa-folder-open me-2"></i> Mis Expedientes
                         </a>
-                        <a href="#" class="list-group-item list-group-item-action">
+                        <a href="{{ route('notificaciones.index') }}" class="list-group-item list-group-item-action">
                             <i class="fas fa-bell me-2"></i> Notificaciones
                         </a>
                         <a href="{{ route('reportes.index') }}" class="list-group-item list-group-item-action active" aria-current="true">
@@ -286,13 +309,42 @@
                         </div>
                     </div>
 
+                    <!-- Messages -->
+                    @if(session('success'))
+                        <div class="alert alert-success alert-dismissible fade show">
+                            <i class="fas fa-check-circle me-2"></i>
+                            {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
+                    @if(session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
+                    @if($errors->any())
+                        <div class="alert alert-danger alert-dismissible fade show">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <ul class="mb-0">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
                     <!-- Sección de Creación de Reportes -->
                     <div class="form-container">
                         <h2 class="text-2xl font-bold text-center mb-4 text-dark">
                             <i class="fas fa-plus-circle me-2"></i>Crear Nuevo Reporte
                         </h2>
                         
-                        <form id="report-form">
+                        <form id="report-form" method="POST" action="{{ route('reportes.store') }}">
                             @csrf
                             <div class="row g-3">
                                 <div class="col-12">
@@ -352,15 +404,163 @@
                                     </tr>
                                 </thead>
                                 <tbody id="reports-table-body">
-                                    <!-- Aquí se insertarán las filas de la tabla dinámicamente -->
-                                    <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">
-                                            <i class="fas fa-file-alt me-2"></i>
-                                            No hay reportes creados aún. Utiliza el formulario superior para crear tu primer reporte.
-                                        </td>
-                                    </tr>
+                                    @forelse($reportes as $reporte)
+                                        <tr>
+                                            <td class="px-3 py-3 text-muted">#{{ $reporte->id_formateado }}</td>
+                                            <td class="px-3 py-3 font-weight-bold text-dark">{{ $reporte->titulo }}</td>
+                                            <td class="px-3 py-3">
+                                                <span class="badge bg-secondary">{{ $reporte->tipo_nombre }}</span>
+                                            </td>
+                                            <td class="px-3 py-3 text-muted">{{ $reporte->fecha_formateada }}</td>
+                                            <td class="px-3 py-3">
+                                                <button type="button" class="action-link border-0 bg-transparent p-0" 
+                                                        onclick="viewReport({{ $reporte->id }}, '{{ addslashes($reporte->titulo) }}', '{{ addslashes($reporte->descripcion) }}', '{{ $reporte->tipo }}', '{{ $reporte->fecha_formateada }}', '{{ addslashes($reporte->getResumenContenido()) }}', '{{ $reporte->estado }}')">
+                                                    <i class="fas fa-eye me-1"></i>Ver
+                                                </button>
+                                                <button type="button" class="action-link border-0 bg-transparent p-0 ms-2" 
+                                                        onclick="editReport({{ $reporte->id }}, '{{ addslashes($reporte->titulo) }}', '{{ addslashes($reporte->descripcion) }}', '{{ $reporte->tipo }}', '{{ $reporte->fecha_reporte }}', '{{ $reporte->estado }}')">
+                                                    <i class="fas fa-edit me-1"></i>Editar
+                                                </button>
+                                                <form method="POST" action="{{ route('reportes.destroy', $reporte) }}" class="d-inline ms-2" onsubmit="return confirmDelete(event, '{{ $reporte->id_formateado }}')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="action-link delete border-0 bg-transparent p-0">
+                                                        <i class="fas fa-trash me-1"></i>Eliminar
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted py-4">
+                                                <i class="fas fa-file-alt me-2"></i>
+                                                No hay reportes creados aún. Utiliza el formulario superior para crear tu primer reporte.
+                                            </td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+
+                    <!-- Modal para Ver Reporte -->
+                    <div class="modal fade" id="viewReportModal" tabindex="-1" aria-labelledby="viewReportModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header bg-primary text-white">
+                                    <h5 class="modal-title" id="viewReportModalLabel">
+                                        <i class="fas fa-file-alt me-2"></i>Detalles del Reporte
+                                    </h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <span class="detail-label">ID del Reporte:</span>
+                                            <div class="detail-value" id="viewReportId"></div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <span class="detail-label">Estado:</span>
+                                            <div class="detail-value" id="viewReportEstado"></div>
+                                        </div>
+                                        <div class="col-12 mb-3">
+                                            <span class="detail-label">Título:</span>
+                                            <div class="detail-value" id="viewReportTitulo"></div>
+                                        </div>
+                                        <div class="col-12 mb-3">
+                                            <span class="detail-label">Descripción:</span>
+                                            <div class="detail-value" id="viewReportDescripcion"></div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <span class="detail-label">Tipo de Reporte:</span>
+                                            <div class="detail-value" id="viewReportTipo"></div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <span class="detail-label">Fecha del Reporte:</span>
+                                            <div class="detail-value" id="viewReportFecha"></div>
+                                        </div>
+                                        <div class="col-12 mb-3">
+                                            <span class="detail-label">Resumen de Contenido:</span>
+                                            <div class="detail-value" id="viewReportResumen"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                    <button type="button" class="btn btn-primary" onclick="switchToEditMode()">
+                                        <i class="fas fa-edit me-2"></i>Editar Reporte
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal para Editar Reporte -->
+                    <div class="modal fade" id="editReportModal" tabindex="-1" aria-labelledby="editReportModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header bg-warning text-dark">
+                                    <h5 class="modal-title" id="editReportModalLabel">
+                                        <i class="fas fa-edit me-2"></i>Editar Reporte
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="editReportForm">
+                                        @csrf
+                                        @method('PUT')
+                                        <input type="hidden" id="editReportId" name="reporte_id">
+                                        
+                                        <div class="row">
+                                            <div class="col-12 mb-3">
+                                                <label for="editReportTitulo" class="form-label">Título del Reporte *</label>
+                                                <input type="text" class="form-control" id="editReportTitulo" name="titulo" required>
+                                            </div>
+                                            
+                                            <div class="col-12 mb-3">
+                                                <label for="editReportDescripcion" class="form-label">Descripción *</label>
+                                                <textarea class="form-control" id="editReportDescripcion" name="descripcion" rows="4" required></textarea>
+                                            </div>
+                                            
+                                            <div class="col-md-6 mb-3">
+                                                <label for="editReportFecha" class="form-label">Fecha *</label>
+                                                <input type="date" class="form-control" id="editReportFecha" name="fecha_reporte" required>
+                                            </div>
+
+                                            <div class="col-md-6 mb-3">
+                                                <label for="editReportTipo" class="form-label">Tipo de Reporte</label>
+                                                <select class="form-select" id="editReportTipo" name="tipo">
+                                                    <option value="expedientes">Expedientes</option>
+                                                    <option value="promociones">Promociones</option>
+                                                    <option value="estadisticas">Estadísticas</option>
+                                                    <option value="general">General</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="col-12 mb-3">
+                                                <label for="editReportEstado" class="form-label">Estado</label>
+                                                <select class="form-select" id="editReportEstado" name="estado">
+                                                    <option value="activo">Activo</option>
+                                                    <option value="archivado">Archivado</option>
+                                                    <option value="finalizado">Finalizado</option>
+                                                    <option value="pausado">Pausado</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    
+                                    <!-- Contenedor para mensajes de error de validación AJAX -->
+                                    <div id="edit-modal-validation-errors" class="alert alert-danger d-none mt-3">
+                                        <ul class="mb-0 ps-3"></ul>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="button" class="btn btn-primary" onclick="saveReportChanges()">
+                                        <i class="fas fa-save me-2"></i>Guardar Cambios
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -406,74 +606,12 @@
         // Establecer fecha actual como valor por defecto
         document.getElementById('report-date').valueAsDate = new Date();
 
-        // Añadir un "event listener" para el envío del formulario
-        form.addEventListener('submit', function(event) {
-            // Prevenir el comportamiento por defecto del formulario (recargar la página)
-            event.preventDefault();
+        // Remove the form event listener to allow normal server submission
+        // The form will now submit to the Laravel controller
 
-            // Obtener los valores del formulario
-            const title = document.getElementById('report-title').value;
-            const description = document.getElementById('report-description').value;
-            const date = document.getElementById('report-date').value;
-            const type = document.getElementById('report-type').value;
-
-            // Limpiar la fila de "no hay reportes" si existe
-            const noReportsRow = tableBody.querySelector('tr td[colspan="5"]');
-            if (noReportsRow) {
-                noReportsRow.parentElement.remove();
-            }
-
-            // Crear una nueva fila para la tabla
-            const newRow = document.createElement('tr');
-
-            // Formatear la fecha para mostrar
-            const formattedDate = new Date(date).toLocaleDateString('es-ES', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            });
-
-            // Formatear el tipo de reporte
-            const typeLabels = {
-                'expedientes': 'Expedientes',
-                'promociones': 'Promociones',
-                'estadisticas': 'Estadísticas',
-                'general': 'General'
-            };
-
-            // Llenar la nueva fila con los datos del reporte
-            newRow.innerHTML = `
-                <td class="px-3 py-3 text-muted">#${reportIdCounter.toString().padStart(3, '0')}</td>
-                <td class="px-3 py-3 font-weight-bold text-dark">${title}</td>
-                <td class="px-3 py-3">
-                    <span class="badge bg-secondary">${typeLabels[type]}</span>
-                </td>
-                <td class="px-3 py-3 text-muted">${formattedDate}</td>
-                <td class="px-3 py-3">
-                    <a href="#" class="action-link" onclick="viewReport(${reportIdCounter}, '${title}', '${description}')">
-                        <i class="fas fa-eye me-1"></i>Ver
-                    </a>
-                    <a href="#" class="action-link" onclick="editReport(${reportIdCounter})">
-                        <i class="fas fa-edit me-1"></i>Editar
-                    </a>
-                    <a href="#" class="action-link delete" onclick="deleteReport(this, ${reportIdCounter})">
-                        <i class="fas fa-trash me-1"></i>Eliminar
-                    </a>
-                </td>
-            `;
-
-            // Agregar la nueva fila al cuerpo de la tabla
-            tableBody.appendChild(newRow);
-
-            // Mostrar mensaje de éxito
-            showAlert('success', 'Reporte creado exitosamente!');
-
-            // Incrementar contador y limpiar formulario
-            reportIdCounter++;
-            form.reset();
-            document.getElementById('report-date').valueAsDate = new Date();
-        });
-
+        // Variables globales para los modales
+        let currentReportId = null;
+        
         // Función para mostrar alertas
         function showAlert(type, message) {
             const alertDiv = document.createElement('div');
@@ -495,34 +633,166 @@
             }, 3000);
         }
 
-        // Función para ver reporte (placeholder)
-        function viewReport(id, title, description) {
-            alert(`Ver Reporte #${id}\nTítulo: ${title}\nDescripción: ${description}`);
+        // Función para ver reporte en modal
+        function viewReport(id, titulo, descripcion, tipo, fecha, resumen, estado) {
+            currentReportId = id;
+            
+            // Llenar los campos del modal de visualización
+            document.getElementById('viewReportId').textContent = '#' + String(id).padStart(3, '0');
+            document.getElementById('viewReportTitulo').textContent = titulo;
+            document.getElementById('viewReportDescripcion').textContent = descripcion;
+            document.getElementById('viewReportTipo').textContent = getTipoNombre(tipo);
+            document.getElementById('viewReportFecha').textContent = fecha;
+            document.getElementById('viewReportResumen').textContent = resumen;
+            document.getElementById('viewReportEstado').innerHTML = getEstadoBadge(estado);
+            
+            // Mostrar el modal
+            const modal = new bootstrap.Modal(document.getElementById('viewReportModal'));
+            modal.show();
         }
 
-        // Función para editar reporte (placeholder)
-        function editReport(id) {
-            alert(`Editar reporte #${id} - Esta funcionalidad se implementará próximamente`);
+        // Función para editar reporte en modal
+        function editReport(id, titulo, descripcion, tipo, fechaReporte, estado) {
+            currentReportId = id;
+            
+            // Llenar los campos del formulario de edición
+            document.getElementById('editReportId').value = id;
+            document.getElementById('editReportTitulo').value = titulo;
+            document.getElementById('editReportDescripcion').value = descripcion;
+            document.getElementById('editReportTipo').value = tipo;
+            document.getElementById('editReportFecha').value = fechaReporte;
+            document.getElementById('editReportEstado').value = estado;
+            
+            // Limpiar errores previos
+            hideValidationErrors();
+            
+            // Mostrar el modal
+            const modal = new bootstrap.Modal(document.getElementById('editReportModal'));
+            modal.show();
         }
 
-        // Función para eliminar reporte
-        function deleteReport(element, id) {
-            if (confirm(`¿Está seguro que desea eliminar el reporte #${id}?`)) {
-                element.closest('tr').remove();
-                showAlert('warning', `Reporte #${id} eliminado correctamente`);
+        // Función para cambiar del modal de vista al modal de edición
+        function switchToEditMode() {
+            // Cerrar modal de vista
+            const viewModal = bootstrap.Modal.getInstance(document.getElementById('viewReportModal'));
+            viewModal.hide();
+            
+            // Obtener datos del reporte actual desde la tabla
+            const row = document.querySelector(`tr:has(button[onclick*="${currentReportId}"])`);
+            if (row) {
+                const cells = row.querySelectorAll('td');
+                const titulo = cells[1].textContent.trim();
                 
-                // Si no quedan reportes, mostrar mensaje
-                if (tableBody.children.length === 0) {
-                    const emptyRow = document.createElement('tr');
-                    emptyRow.innerHTML = `
-                        <td colspan="5" class="text-center text-muted py-4">
-                            <i class="fas fa-file-alt me-2"></i>
-                            No hay reportes creados aún. Utiliza el formulario superior para crear tu primer reporte.
-                        </td>
-                    `;
-                    tableBody.appendChild(emptyRow);
+                // Buscar el botón de editar para obtener los datos
+                const editButton = row.querySelector('button[onclick*="editReport"]');
+                if (editButton) {
+                    const onclickAttr = editButton.getAttribute('onclick');
+                    const matches = onclickAttr.match(/editReport\((\d+),\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',\s*'([^']*)'\)/);
+                    if (matches) {
+                        const [, id, titulo, descripcion, tipo, fechaReporte, estado] = matches;
+                        editReport(id, titulo, descripcion, tipo, fechaReporte, estado);
+                    }
                 }
             }
+        }
+
+        // Función para guardar cambios del reporte
+        function saveReportChanges() {
+            const form = document.getElementById('editReportForm');
+            const formData = new FormData(form);
+            
+            // Convertir FormData a objeto JSON
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+            
+            // Realizar petición AJAX
+            fetch(`/reportes/${currentReportId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success || data.message) {
+                    // Cerrar modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editReportModal'));
+                    modal.hide();
+                    
+                    // Mostrar mensaje de éxito
+                    showAlert('success', data.message || 'Reporte actualizado exitosamente');
+                    
+                    // Recargar la página para mostrar los cambios
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showValidationErrors(data.errors || { general: ['Error al actualizar el reporte'] });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showValidationErrors({ general: ['Error de conexión al actualizar el reporte'] });
+            });
+        }
+
+        // Función para mostrar errores de validación
+        function showValidationErrors(errors) {
+            const errorContainer = document.getElementById('edit-modal-validation-errors');
+            const errorList = errorContainer.querySelector('ul');
+            
+            errorList.innerHTML = '';
+            
+            Object.values(errors).flat().forEach(error => {
+                const li = document.createElement('li');
+                li.textContent = error;
+                errorList.appendChild(li);
+            });
+            
+            errorContainer.classList.remove('d-none');
+        }
+
+        // Función para ocultar errores de validación
+        function hideValidationErrors() {
+            const errorContainer = document.getElementById('edit-modal-validation-errors');
+            errorContainer.classList.add('d-none');
+        }
+
+        // Función para confirmar eliminación
+        function confirmDelete(event, reporteId) {
+            event.preventDefault();
+            
+            if (confirm(`¿Está seguro que desea eliminar el reporte ${reporteId}?`)) {
+                event.target.submit();
+                return true;
+            }
+            return false;
+        }
+
+        // Funciones auxiliares para obtener nombres y badges
+        function getTipoNombre(tipo) {
+            const tipos = {
+                'expedientes': 'Expedientes',
+                'promociones': 'Promociones',
+                'estadisticas': 'Estadísticas',
+                'general': 'General'
+            };
+            return tipos[tipo] || 'Desconocido';
+        }
+
+        function getEstadoBadge(estado) {
+            const badges = {
+                'activo': '<span class="badge bg-success">Activo</span>',
+                'archivado': '<span class="badge bg-secondary">Archivado</span>',
+                'finalizado': '<span class="badge bg-primary">Finalizado</span>',
+                'pausado': '<span class="badge bg-warning">Pausado</span>'
+            };
+            return badges[estado] || '<span class="badge bg-dark">Desconocido</span>';
         }
 
         // Auto-hide alerts after 5 seconds

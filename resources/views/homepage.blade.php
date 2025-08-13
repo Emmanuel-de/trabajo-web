@@ -129,13 +129,13 @@
                         <a class="list-group-item list-group-item-action bg-primary text-white">
                             📋 BOLETÍN JUDICIAL
                         </a>
-                        <a class="list-group-item list-group-item-action">
-                            📄 Listas de Acuerdos
+                        <a class="list-group-item list-group-item-action" href="https://tribunalelectronico.gob.mx/TE/acceso-libre/listas-acuerdos/seleccione-municipio" target="_blank">
+                          📄 Listas de Acuerdos
                         </a>
-                        <a class="list-group-item list-group-item-action">
+                        <a class="list-group-item list-group-item-action" href="https://tribunalelectronico.gob.mx/TE/acceso-libre/sorteo-pleno/consultar" target="_blank">
                             🎯 Sorteo de Pleno
                         </a>
-                        <a class="list-group-item list-group-item-action">
+                        <a class="list-group-item list-group-item-action" href="https://tribunalelectronico.gob.mx/TE/acceso-libre/edictos/seleccione-municipio" target="_blank">
                             📚 Edictos
                         </a>
                     </div>

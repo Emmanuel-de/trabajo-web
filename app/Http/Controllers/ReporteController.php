@@ -16,8 +16,9 @@ class ReporteController extends Controller
      */
     public function index()
     {
-        // Obtener todos los reportes del usuario actual, ordenados por fecha de creación
+        // Obtener todos los reportes del usuario actual (excluyendo eliminados), ordenados por fecha de creación
         $reportes = Reporte::where('user_id', Auth::id())
+            ->whereNull('deleted_at') // Asegurar que no se muestren reportes eliminados
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
@@ -114,6 +115,9 @@ class ReporteController extends Controller
     {
         // Verificar que el reporte pertenece al usuario actual
         if ($reporte->user_id !== Auth::id()) {
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'No tienes permiso para actualizar este reporte.'], 403);
+            }
             abort(403, 'No tienes permiso para actualizar este reporte.');
         }
 
@@ -123,10 +127,28 @@ class ReporteController extends Controller
             'descripcion' => 'required|string|max:1000',
             'fecha_reporte' => 'required|date',
             'tipo' => 'required|string|in:expedientes,promociones,estadisticas,general',
-            'estado' => 'required|string|in:activo,archivado,finalizado'
+            'estado' => 'required|string|in:activo,archivado,finalizado,pausado'
+        ], [
+            'titulo.required' => 'El título del reporte es obligatorio.',
+            'titulo.max' => 'El título no puede exceder 255 caracteres.',
+            'descripcion.required' => 'La descripción del reporte es obligatoria.',
+            'descripcion.max' => 'La descripción no puede exceder 1000 caracteres.',
+            'fecha_reporte.required' => 'La fecha del reporte es obligatoria.',
+            'fecha_reporte.date' => 'La fecha debe ser válida.',
+            'tipo.required' => 'El tipo de reporte es obligatorio.',
+            'tipo.in' => 'El tipo de reporte seleccionado no es válido.',
+            'estado.required' => 'El estado del reporte es obligatorio.',
+            'estado.in' => 'El estado seleccionado no es válido.'
         ]);
 
         if ($validator->fails()) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            
             return back()
                 ->withErrors($validator)
                 ->withInput();
@@ -143,10 +165,25 @@ class ReporteController extends Controller
                 'updated_at' => now()
             ]);
 
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Reporte actualizado exitosamente.',
+                    'reporte' => $reporte
+                ]);
+            }
+
             return redirect()->route('reportes.index')
                 ->with('success', 'Reporte actualizado exitosamente.');
 
         } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al actualizar el reporte.'
+                ], 500);
+            }
+            
             return back()
                 ->withInput()
                 ->with('error', 'Error al actualizar el reporte.');
@@ -154,17 +191,23 @@ class ReporteController extends Controller
     }
 
     /**
-     * Eliminar un reporte
+     * Eliminar un reporte (soft delete)
      */
     public function destroy(Reporte $reporte)
     {
         // Verificar que el reporte pertenece al usuario actual
         if ($reporte->user_id !== Auth::id()) {
-            return response()->json(['error' => 'No tienes permiso para eliminar este reporte.'], 403);
+            if (request()->ajax()) {
+                return response()->json(['error' => 'No tienes permiso para eliminar este reporte.'], 403);
+            }
+            return redirect()->route('reportes.index')
+                ->with('error', 'No tienes permiso para eliminar este reporte.');
         }
 
         try {
-            $reporteId = $reporte->id;
+            $reporteId = str_pad($reporte->id, 3, '0', STR_PAD_LEFT);
+            
+            // Usar soft delete (esto marcará el registro como eliminado pero no lo borrará físicamente)
             $reporte->delete();
 
             // Si es una petición AJAX, devolver JSON
@@ -179,6 +222,8 @@ class ReporteController extends Controller
                 ->with('success', "Reporte #{$reporteId} eliminado correctamente.");
 
         } catch (\Exception $e) {
+            \Log::error('Error al eliminar reporte: ' . $e->getMessage());
+            
             if (request()->ajax()) {
                 return response()->json([
                     'success' => false,
@@ -356,5 +401,87 @@ class ReporteController extends Controller
         $csv = "ID,Título,Descripción,Tipo,Fecha,Estado\n";
         $csv .= "{$reporte->id},{$reporte->titulo},{$reporte->descripcion},{$reporte->tipo},{$reporte->fecha_reporte},{$reporte->estado}";
         return $csv;
+    }
+
+    /**
+     * Mostrar reportes eliminados (papelera)
+     */
+    public function trash()
+    {
+        $reportesEliminados = Reporte::where('user_id', Auth::id())
+            ->onlyTrashed()
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(10);
+
+        return view('reportes.trash', compact('reportesEliminados'));
+    }
+
+    /**
+     * Restaurar un reporte eliminado
+     */
+    public function restore($id)
+    {
+        $reporte = Reporte::where('user_id', Auth::id())
+            ->onlyTrashed()
+            ->findOrFail($id);
+
+        try {
+            $reporte->restore();
+
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Reporte #{$reporte->id_formateado} restaurado correctamente."
+                ]);
+            }
+
+            return redirect()->route('reportes.index')
+                ->with('success', "Reporte #{$reporte->id_formateado} restaurado correctamente.");
+
+        } catch (\Exception $e) {
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al restaurar el reporte.'
+                ], 500);
+            }
+
+            return back()->with('error', 'Error al restaurar el reporte.');
+        }
+    }
+
+    /**
+     * Eliminar permanentemente un reporte
+     */
+    public function forceDelete($id)
+    {
+        $reporte = Reporte::where('user_id', Auth::id())
+            ->onlyTrashed()
+            ->findOrFail($id);
+
+        try {
+            $reporteId = $reporte->id_formateado;
+            $reporte->forceDelete();
+
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Reporte #{$reporteId} eliminado permanentemente."
+                ]);
+            }
+
+            return redirect()->route('reportes.trash')
+                ->with('success', "Reporte #{$reporteId} eliminado permanentemente.");
+
+        } catch (\Exception $e) {
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al eliminar permanentemente el reporte.'
+                ], 500);
+            }
+
+            return back()->with('error', 'Error al eliminar permanentemente el reporte.');
+        }
     }
 }

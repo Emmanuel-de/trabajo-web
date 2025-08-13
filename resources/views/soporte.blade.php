@@ -201,7 +201,7 @@
                             <li><a class="dropdown-item" href="{{ route('perfil') }}"><i class="fas fa-file-alt me-2"></i>Mi Perfil</a></li>
                             
                             <li><a class="dropdown-item" href="{{ route('buzon') }}"><i class="fas fa-envelope me-2"></i>Mensajes</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-bell me-2"></i>Notificaciones</a></li>
+                            <li><a class="dropdown-item" href="{{ route('notificaciones.index') }}git"><i class="fas fa-bell me-2"></i>Notificaciones</a></li>
                             <li><a class="dropdown-item active" aria-current="page" href="{{ route('soporte') }}"><i class="fas fa-question-circle me-2"></i>Soporte</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
@@ -237,7 +237,7 @@
                         <a href="{{ route('expedientes.index') }}" class="list-group-item list-group-item-action">
                             <i class="fas fa-folder-open me-2"></i> Mis Expedientes
                         </a>
-                        <a href="#" class="list-group-item list-group-item-action">
+                        <a href="{{ route('notificaciones.index') }}" class="list-group-item list-group-item-action">
                             <i class="fas fa-bell me-2"></i> Notificaciones
                         </a>
                         <a href="{{ route('reportes.index') }}" class="list-group-item list-group-item-action">
