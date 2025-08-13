@@ -236,18 +236,13 @@
                         <a href="#" class="list-group-item list-group-item-action">
                             <i class="fas fa-bell me-2"></i> Notificaciones
                         </a>
-                        <a href="#" class="list-group-item list-group-item-action">
+                        <a href="{{ route('reportes.index') }}" class="list-group-item list-group-item-action">
                             <i class="fas fa-chart-bar me-2"></i> Reportes
                         </a>
                         <a href="{{ route('perfil') }}" class="list-group-item list-group-item-action">
                             <i class="fas fa-user-circle me-2"></i> Mi Perfil
                         </a>
-                        <a href="#" class="list-group-item list-group-item-action">
-                            <i class="fas fa-cogs me-2"></i> Configuración
-                        </a>
-                        <a href="{{ route('soporte') }}" class="list-group-item list-group-item-action">
-                            <i class="fas fa-question-circle me-2"></i> Soporte
-                        </a>
+                        
                     </div>
 
                     <div class="mt-4">

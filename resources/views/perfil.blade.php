@@ -257,7 +257,7 @@
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><h6 class="dropdown-header">Opciones de Usuario</h6></li>
                             <li><a class="dropdown-item active" aria-current="page" href="{{ route('perfil') }}"><i class="fas fa-file-alt me-2"></i>Mi Perfil</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Configuración</a></li>
+                            
                             <li><a class="dropdown-item" href="{{ route('buzon') }}"><i class="fas fa-envelope me-2"></i>Mensajes</a></li>
                             <li><a class="dropdown-item" href="#"><i class="fas fa-bell me-2"></i>Notificaciones</a></li>
                             {{-- AQUÍ LA CORRECCIÓN: CAMBIADO DE 'homeayuda' A 'soporte' --}}
@@ -300,15 +300,13 @@
                         <a href="#" class="list-group-item list-group-item-action">
                             <i class="fas fa-bell me-2"></i> Notificaciones
                         </a>
-                        <a href="#" class="list-group-item list-group-item-action">
+                        <a href="{{ route('reportes.index') }}" class="list-group-item list-group-item-action">
                             <i class="fas fa-chart-bar me-2"></i> Reportes
                         </a>
                         <a href="{{ route('perfil') }}" class="list-group-item list-group-item-action active" aria-current="true">
                             <i class="fas fa-user-circle me-2"></i> Mi Perfil
                         </a>
-                        <a href="#" class="list-group-item list-group-item-action">
-                            <i class="fas fa-cogs me-2"></i> Configuración
-                        </a>
+                        
                         {{-- CORRECCIÓN AQUÍ: CAMBIADO DE 'homeayuda' A 'soporte' --}}
                         <a href="{{ route('soporte') }}" class="list-group-item list-group-item-action">
                             <i class="fas fa-question-circle me-2"></i> Soporte

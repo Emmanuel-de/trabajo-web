@@ -11,7 +11,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\ExpedienteController;
 use App\Http\Controllers\UsuarioController; // ¡Importa el UsuarioController!
-
+use App\Http\Controllers\ReporteController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -92,6 +92,30 @@ Route::middleware(['auth'])->group(function () {
     // NUEVA RUTA PARA ACTUALIZAR EXPEDIENTES DESDE EL MODAL (usando PUT para RESTful update)
     
     Route::post('/expedientes/{expediente}/update-modal', [ExpedienteController::class, 'updateFromModal'])->name('expedientes.updateFromModal');
+    
+     // ===== RUTAS DE REPORTES =====
+    // Ruta para mostrar la vista principal de reportes (generador y visor)
+    Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
+    
+    // Ruta para crear un nuevo reporte (POST)
+    Route::post('/reportes', [ReporteController::class, 'store'])->name('reportes.store');
+    
+    // Ruta para mostrar un reporte específico
+    Route::get('/reportes/{reporte}', [ReporteController::class, 'show'])->name('reportes.show');
+    
+    // Ruta para editar un reporte
+    Route::get('/reportes/{reporte}/editar', [ReporteController::class, 'edit'])->name('reportes.edit');
+    Route::put('/reportes/{reporte}', [ReporteController::class, 'update'])->name('reportes.update');
+    
+    // Ruta para eliminar un reporte
+    Route::delete('/reportes/{reporte}', [ReporteController::class, 'destroy'])->name('reportes.destroy');
+    
+    // Ruta para exportar reportes (opcional - PDF, Excel, etc.)
+    Route::get('/reportes/{reporte}/exportar', [ReporteController::class, 'export'])->name('reportes.export');
+    
+    // Ruta para generar reportes automáticos por tipo
+    Route::post('/reportes/generar/{tipo}', [ReporteController::class, 'generateByType'])->name('reportes.generateByType');
+    
     // Rutas para el perfil de usuario usando ProfileController
     Route::get('/perfil', [ProfileController::class, 'show'])->name('perfil');
     Route::put('/perfil', [ProfileController::class, 'update'])->name('perfil.update');
@@ -99,3 +123,5 @@ Route::middleware(['auth'])->group(function () {
     // Aquí puedes añadir cualquier otra ruta que solo deba ser accesible por usuarios autenticados
 
 });
+
+
